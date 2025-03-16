@@ -6,6 +6,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
 object AuthSharedPreferences {
+
     private const val PREFS_NAME = "devices"
     private const val KEY_DEVICES = "devices_map"
     private lateinit var sharedPreferences: SharedPreferences
@@ -14,10 +15,12 @@ object AuthSharedPreferences {
         sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
 
-    fun saveDevice(ip: String, state: String) {
+    fun saveDevice(id: Int, ip: String) {
+
         val devices = getDevices().toMutableMap()
-        devices[ip] = state
+        devices[ip] = id.toString()
         saveDevices(devices)
+
     }
 
     fun getDevice(ip: String): String? {
@@ -34,10 +37,12 @@ object AuthSharedPreferences {
         }
     }
 
-    fun removeDevice(ip: String?) {
+    fun removeDevice(id: Int) {
+
         val devices = getDevices().toMutableMap()
-        devices.remove(ip)
+        devices.entries.removeIf { it.value == id.toString() }
         saveDevices(devices)
+
     }
 
     fun clearDevices() {
@@ -50,7 +55,6 @@ object AuthSharedPreferences {
     }
 
     fun hasDevices(): Boolean {
-        //return getDevices().isNotEmpty()
-        return false
+        return getDevices().isNotEmpty()
     }
 }

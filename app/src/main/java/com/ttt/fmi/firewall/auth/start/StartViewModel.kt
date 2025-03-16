@@ -1,14 +1,11 @@
 package com.ttt.fmi.firewall.auth.start
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ttt.fmi.firewall.AuthSharedPreferences
-import com.ttt.fmi.firewall.device.DeviceService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import okhttp3.Response
 
 class StartViewModel(
 

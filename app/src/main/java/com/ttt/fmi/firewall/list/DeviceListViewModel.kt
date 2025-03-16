@@ -1,8 +1,7 @@
 package com.ttt.fmi.firewall.list
 
 import androidx.lifecycle.ViewModel
-import com.ttt.fmi.firewall.device.Device
-import com.ttt.fmi.firewall.device.DeviceService
+import com.ttt.fmi.firewall.device.api.DeviceService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 

@@ -1,6 +1,6 @@
-package com.ttt.fmi.firewall.device
+package com.ttt.fmi.firewall.device.api
 
-data class Device (
+data class DeviceResponse (
 
     val id: Int,
     val ip: String,
@@ -10,5 +10,6 @@ data class Device (
     val name: String,
     val port: Int,
     val protocol: String
+
 
 )
