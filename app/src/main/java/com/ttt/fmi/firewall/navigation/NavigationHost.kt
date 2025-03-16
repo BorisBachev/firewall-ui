@@ -89,8 +89,8 @@ fun NavigationHost(navController: NavHostController) {
     FirewallTheme {
         Scaffold(
             bottomBar = {
-                if (//false){
-                    shouldShowBottomNavigation(currentRoute)) {
+                if (false){
+                    //shouldShowBottomNavigation(currentRoute)) {
                     BottomNavigation(
                         modifier = Modifier.height(64.dp),
                     ) {

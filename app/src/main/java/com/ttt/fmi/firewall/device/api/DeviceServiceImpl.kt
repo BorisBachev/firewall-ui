@@ -1,5 +1,6 @@
 package com.ttt.fmi.firewall.device.api
 
+import com.ttt.fmi.firewall.device.CreateDevice
 import com.ttt.fmi.firewall.device.Device
 import com.ttt.fmi.firewall.device.Logs
 import retrofit2.Response
@@ -23,8 +24,7 @@ class DeviceServiceImpl (
             mac_address = response.body()?.mac_address ?: "",
             name = response.body()?.name ?: "",
             port = response.body()?.port ?: 0,
-            protocol = response.body()?.protocol ?: ""
-
+            protocol = response.body()?.protocol ?: "",
         )
 
         return device
@@ -42,6 +42,18 @@ class DeviceServiceImpl (
         ip: String
     ): Response<List<Logs>> {
         return deviceApi.getDeviceLogs(ip)
+    }
+
+    override suspend fun newDevice(
+        device: CreateDevice
+    ): Response<Device> {
+        return deviceApi.newDevice(device)
+    }
+
+    override suspend fun quarantineDevice(
+        ip: String
+    ): Response<Device> {
+        return deviceApi.quarantineDevice(ip)
     }
 
 

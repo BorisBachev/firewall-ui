@@ -19,6 +19,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -32,12 +33,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.ttt.fmi.firewall.device.CreateDevice
 import com.ttt.fmi.firewall.device.Device
 import com.ttt.fmi.firewall.device.DeviceViewModel
 
 @Composable
 fun DeviceListScreen(
-    toDevice: (String) -> Unit,
+    toDevice: (Int) -> Unit,
     deviceViewModel: DeviceViewModel,
     deviceListViewModel: DeviceListViewModel
 ) {
@@ -76,7 +78,7 @@ fun DeviceListScreen(
                             device = device,
                             isSelected = device.id == selectedDevice?.id,
                             onInfo = { toDevice(device.id) },
-                            onQuarantine = { },
+                            onQuarantine = { deviceViewModel.quarantineDevice(device) },
                             onClick = { deviceViewModel.setSelectedDevice(device) }
                         )
                     }
@@ -116,11 +118,8 @@ fun DeviceListScreen(
     if (showAddDialog) {
         AddDeviceDialog(
             onDismiss = { deviceListViewModel.hideAddDialog() },
-            onAddDevice = { ip ->
-                if (ip.isNotBlank()) {
-                    val newDevice = Device(ip, true)
-                    deviceViewModel.addDevice(newDevice)
-                }
+            onAddDevice = { device ->
+                    deviceViewModel.newDevice(device)
             }
         )
     }
@@ -128,7 +127,7 @@ fun DeviceListScreen(
 
 @Composable
 fun DeviceItem(device: Device, isSelected: Boolean,
-               onInfo: (String) -> Unit, onQuarantine: () -> Unit,
+               onInfo: (Int) -> Unit, onQuarantine: () -> Unit,
                onClick: (Device) -> Unit) {
 
 
@@ -150,7 +149,7 @@ fun DeviceItem(device: Device, isSelected: Boolean,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = device.id,
+                text = device.ip,
                 style = MaterialTheme.typography.bodyLarge
             )
 
@@ -173,9 +172,19 @@ fun DeviceItem(device: Device, isSelected: Boolean,
 }
 
 @Composable
-fun AddDeviceDialog(onDismiss: () -> Unit, onAddDevice: (String) -> Unit) {
-    var ipAddress by remember { mutableStateOf("") }
-    var isError by remember { mutableStateOf(false) }
+fun AddDeviceDialog(onDismiss: () -> Unit, onAddDevice: (CreateDevice) -> Unit) {
+    var name by remember { mutableStateOf("") }
+    var ip by remember { mutableStateOf("") }
+    var macAddress by remember { mutableStateOf("") }
+    var port by remember { mutableStateOf("") }
+    var protocol by remember { mutableStateOf("tcp") } // Default protocol is "tcp"
+    var isQuarantined by remember { mutableStateOf(false) }
+    var whitelist by remember { mutableStateOf<List<String>>(emptyList()) }
+
+    var isNameError by remember { mutableStateOf(false) }
+    var isIpError by remember { mutableStateOf(false) }
+    var isMacAddressError by remember { mutableStateOf(false) }
+    var isPortError by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -191,36 +200,150 @@ fun AddDeviceDialog(onDismiss: () -> Unit, onAddDevice: (String) -> Unit) {
                 )
 
                 TextField(
-                    value = ipAddress,
-                    onValueChange = { newText ->
-                        if (newText.matches(Regex("^([0-9]{1,3}\\.){0,3}[0-9]{0,3}$"))) {
-                            ipAddress = newText
-                            isError = false
-                        } else {
-                            isError = true
-                        }
+                    value = name,
+                    onValueChange = { newName ->
+                        name = newName
+                        isNameError = !newName.matches(Regex("^[a-zA-Z0-9 ]+$"))
                     },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    isError = isError,
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Number
-                    ),
-                    placeholder = { Text("Enter IP Address") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    label = { Text("Device Name") },
+                    isError = isNameError,
                     trailingIcon = {
-                        if (isError) {
+                        if (isNameError) {
                             Icon(Icons.Default.Warning, contentDescription = "Error", tint = MaterialTheme.colorScheme.error)
                         }
                     }
                 )
 
+                TextField(
+                    value = ip,
+                    onValueChange = { newIp ->
+                        if (newIp.matches(Regex("^([0-9]{1,3}\\.){0,3}[0-9]{0,3}$"))) {
+                            ip = newIp
+                            isIpError = false
+                        } else {
+                            isIpError = true
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    label = { Text("IP Address") },
+                    isError = isIpError,
+                    trailingIcon = {
+                        if (isIpError) {
+                            Icon(Icons.Default.Warning, contentDescription = "Error", tint = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                )
+
+                TextField(
+                    value = macAddress,
+                    onValueChange = { newMac ->
+                       // if (newMac.matches(Regex("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"))) {
+                             macAddress = newMac
+                      //      isMacAddressError = false
+                      //  } else {
+                        //    isMacAddressError = true
+                      //  }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    label = { Text("MAC Address") },
+                    isError = isMacAddressError,
+                    trailingIcon = {
+                        if (isMacAddressError) {
+                            Icon(Icons.Default.Warning, contentDescription = "Error", tint = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                )
+
+                TextField(
+                    value = port,
+                    onValueChange = { newPort ->
+                        if (newPort.matches(Regex("^[0-9]{1,5}$"))) {
+                            port = newPort
+                            isPortError = false
+                        } else {
+                            isPortError = true
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    label = { Text("Port") },
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Number
+                    ),
+                    isError = isPortError,
+                    trailingIcon = {
+                        if (isPortError) {
+                            Icon(Icons.Default.Warning, contentDescription = "Error", tint = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "Protocol: ${protocol.uppercase()}", modifier = Modifier.weight(1f))
+                    Switch(
+                        checked = protocol == "tcp",
+                        onCheckedChange = { isTcp ->
+                            protocol = if (isTcp) "tcp" else "udp"
+                        }
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "Quarantine Device", modifier = Modifier.weight(1f))
+                    Switch(
+                        checked = isQuarantined,
+                        onCheckedChange = { isQuarantined = it }
+                    )
+                }
+
+                TextField(
+                    value = whitelist.joinToString(","),
+                    onValueChange = { newWhitelist ->
+                        val addresses = newWhitelist.split(",").map { it.trim() }
+                        val isValid = addresses.all { it.matches(Regex("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")) }
+                        if (isValid) {
+                            whitelist = addresses
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    label = { Text("Whitelist (comma-separated IPs)") },
+                    placeholder = { Text("e.g., 192.168.1.102, 192.168.1.120") }
+                )
+
                 Button(
                     onClick = {
-                        if (ipAddress.matches(Regex("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"))) {
-                            onAddDevice(ipAddress)
+                        if (!isNameError && !isIpError && !isMacAddressError && !isPortError) {
+                            val device = CreateDevice(
+                                name = name,
+                                ip = ip,
+                                mac_address = macAddress,
+                                port = port.toIntOrNull() ?: 0,
+                                protocol = protocol,
+                                is_quarantined = if(isQuarantined) 1 else 0,
+                                whitelist = if (whitelist.isEmpty()) null else whitelist
+                            )
+                            onAddDevice(device)
                             onDismiss()
-                        } else {
-                            isError = true
                         }
                     },
                     modifier = Modifier

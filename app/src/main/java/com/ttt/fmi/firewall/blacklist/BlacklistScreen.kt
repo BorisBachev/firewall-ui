@@ -91,7 +91,7 @@ fun DeviceBlacklistItem(device: Device, isSelected: Boolean,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = device.id,
+                text = device.ip,
                 style = MaterialTheme.typography.bodyLarge
             )
 

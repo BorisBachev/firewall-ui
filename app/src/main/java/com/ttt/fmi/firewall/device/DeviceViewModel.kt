@@ -1,8 +1,10 @@
 package com.ttt.fmi.firewall.device
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ttt.fmi.firewall.AuthSharedPreferences
+import com.ttt.fmi.firewall.device.api.DeviceResponse
 import com.ttt.fmi.firewall.device.api.DeviceService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,6 +37,12 @@ class DeviceViewModel (
         if (device == null) return
 
         _devices.value = _devices.value?.plus(device) ?: listOf(device)
+        Log.d("DeviceViewModel", "addDevice: ${_devices.value}")
+    }
+    fun saveDevice(device: Device?) {
+        if (device == null) return
+
+        authSharedPreferences.saveDevice(device.id, device.ip)
     }
 
     fun setSelectedDevice(device: Device?) {
@@ -100,5 +108,44 @@ class DeviceViewModel (
         }
 
     }
+
+    fun newDevice(device: CreateDevice): Device {
+
+        var response = Device(0, "", 0, 0, "", "", 0, "")
+
+        viewModelScope.launch {
+
+            try {
+                response = deviceService.newDevice(device)?.body() ?: return@launch
+                _selectedDevice.value = response
+                addDevice(response)
+                saveDevice(response)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+        }
+
+        return response
+
+    }
+
+    fun quarantineDevice(device: Device?) {
+
+        if (device == null) return
+
+        viewModelScope.launch {
+
+            try {
+                deviceService.quarantineDevice(device.ip)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+        }
+
+    }
+
+
 
 }

@@ -5,5 +5,7 @@ object DeviceDestinations {
     const val GETDEVICE = "/get_device"
     const val LOGS = "/get_logs"
     const val DEVICELOGS = "/get_device_logs"
+    const val NEWDEVICE = "/add_device"
+    const val QUARANTINEDEVICE = "/quarantine_device"
 
 }
